@@ -4,133 +4,127 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.ListIterator;
 import java.util.List;
 
 public class DateMerger {
 
 	/**
-	 * @param dateRanges
-	 * @return
+	 * @param dateRanges List of sorted date ranges
+	 * @return List of merged date ranges
 	 */
-	public List<DateRange> mergeDates(List<DateRange>dateRanges){
+	public List<DateRange> mergeDates(List<DateRange> dateRanges){
 
-		List<DateRange> resDateRanges =  new ArrayList<DateRange>();
+		List<DateRange> resDateRanges =  new ArrayList<>();
+		ListIterator<DateRange> itr = dateRanges.listIterator();
+		while(itr.hasNext()) {
 
-		DateRange tempDateRange = dateRanges.get(0);
-		resDateRanges.add(tempDateRange);
-		for (int i = 1; i < dateRanges.size(); i++) {
+			DateRange updateRange = new DateRange();
 
-			DateRange dateRange = dateRanges.get(i);
-			DateRange dateRangeTemp = new DateRange();
-			if(tempDateRange.getEndDate().compareTo(dateRange.getStartDate())>=0) {
-				dateRangeTemp.setStartDate(tempDateRange.getStartDate());
-				dateRangeTemp.setEndDate(dateRange.getEndDate());
-				if (! resDateRanges.isEmpty() && 
-						resDateRanges.get(resDateRanges.size()-1).getStartDate().equals(dateRangeTemp.getStartDate())) {
-					resDateRanges.remove(resDateRanges.size()-1);
+			//Add the first element to the list
+			DateRange current = itr.next();
+			if (resDateRanges.size() == 0)
+				resDateRanges.add(current);
+
+			if (itr.hasNext() &&
+				current.compareTo(dateRanges.get(itr.nextIndex())) != 0 &&
+				dateRanges.get(itr.nextIndex()).getEndDate().compareTo(current.getStartDate()) > 0 &&
+				dateRanges.get(itr.nextIndex()).getStartDate().compareTo(current.getEndDate()) < 0) {
+
+				updateRange.setStartDate(current.getStartDate());
+				updateRange.setEndDate(dateRanges.get(itr.nextIndex()).getEndDate());
+
+				if (resDateRanges.get(resDateRanges.size() - 1).getStartDate().equals(current.getStartDate())) {
+					resDateRanges.remove(resDateRanges.size() - 1);
+					itr.next();
 				}
-			}else{
-				if(dateRanges.size() > i+1) {
-					DateRange dateRange1 = dateRanges.get(i+1);
-					if(dateRange.getEndDate().compareTo(dateRange1.getStartDate())>=0) {
-						dateRangeTemp.setStartDate(dateRange.getStartDate());
-						dateRangeTemp.setEndDate(dateRange1.getEndDate());
-					}else {
-						dateRangeTemp = dateRange;
-					}
-				}else {
-					dateRangeTemp = dateRange;
+				else {
+					updateRange = current;
 				}
-
-
 			}
-			tempDateRange = dateRangeTemp;
-			resDateRanges.add(dateRangeTemp);
-		}		
-		return resDateRanges;
+			else {
+				updateRange = current;
+			}
 
+			if(!resDateRanges.contains(updateRange))
+				resDateRanges.add(updateRange);
+		}
+
+		return resDateRanges;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ParseException{
 
 		DateFormat format = new SimpleDateFormat("dd MMM yyyy");
 
-		List<DateRange>dateRanges =  new ArrayList<DateRange>();
-		
+		List<DateRange> dateRanges =  new ArrayList<>();
 
 		DateMerger dm = new DateMerger();
 
-		DateRange dateRange = null;
-		try {
-			dateRange = new DateRange(format.parse("01 Jan 2014"),format.parse("30 Jan 2014")); 
-			dateRanges.add(dateRange);
-			dateRange = null;
+		dateRanges.add(new DateRange()
+			.startDate(format.parse("01 Jan 2014"))
+			.endDate(format.parse("30 Jan 2014"))
+		);
 
-			dateRange = new DateRange(format.parse("15 Jan 2014"),format.parse("15 Feb 2014")); 
-			dateRanges.add(dateRange);
-			dateRange = null;
+		dateRanges.add(new DateRange()
+			.startDate(format.parse("15 Jan 2014"))
+			.endDate(format.parse("15 Feb 2014"))
+		);
 
-			dateRange = new DateRange(format.parse("10 Mar 2014"),format.parse("15 Apr 2014")); 
-			dateRanges.add(dateRange);
-			dateRange = null;
+		dateRanges.add(new DateRange()
+			.startDate(format.parse("10 Mar 2014"))
+			.endDate(format.parse("15 Apr 2014"))
+		);
 
-			dateRange = new DateRange(format.parse("16 Apr 2014"),format.parse("15 May 2014")); 
-			dateRanges.add(dateRange);
-			dateRange = null;
+		dateRanges.add(new DateRange()
+			.startDate(format.parse("14 May 2014"))
+			.endDate(format.parse("30 May 2014"))
+		);
 
-
-			dateRange = new DateRange(format.parse("14 May 2014"),format.parse("30 May 2014")); 
-			dateRanges.add(dateRange);
-			dateRange = null;
-
-
-		} catch (ParseException e) { 
-			// TODO Auto-generated catch block
-			e.printStackTrace(); 
-		} 
+		System.out.println("First Set:");
 		System.out.println("input dates");
-		System.out.println(dateRanges); System.out.println("output dates");
+		System.out.println(dateRanges);
+		System.out.println("output dates");
 		System.out.println(dm.mergeDates(dateRanges));
 
-		dateRanges = null; dateRanges = new ArrayList<DateRange>();
+		dateRanges = new ArrayList<>();
 
+		dateRanges.add(new DateRange()
+			.startDate(format.parse("01 Jan 2014"))
+			.endDate(format.parse("15 Jan 2014"))
+		);
 
+		dateRanges.add(new DateRange()
+			.startDate(format.parse("16 Jan 2014"))
+			.endDate(format.parse("30 Jan 2014"))
+		);
 
-		try { 
-			dateRange = new DateRange(format.parse("01 Jan 2014"),format.parse("15 Jan 2014")); 
-			dateRanges.add(dateRange);
-			dateRange = null;
-	
-			dateRange = new DateRange(format.parse("16 Jan 2014"),format.parse("30 Jan 2014")); 
-			dateRanges.add(dateRange);
-			dateRange = null;
-
-		} catch (ParseException e) { 
-			// TODO Auto-generated catch block
-			e.printStackTrace(); 
-		} 
-		System.out.println("input dates 2");
-		System.out.println(dateRanges); System.out.println("output dates 2 ");
+		System.out.println("Second Set:");
+		System.out.println("input dates ");
+		System.out.println(dateRanges); System.out.println("output dates ");
 		System.out.println(dm.mergeDates(dateRanges));
 
-	
-	  dateRanges = null; 
-	  dateRanges = new ArrayList<DateRange>(); 
-	  try { 
-		  dateRange = new DateRange(format.parse("01 Jan 2014"),format.parse("15 Jan 2014")); 
-		  dateRanges.add(dateRange);
-		  dateRange = null;
-		  
-		  dateRange = new DateRange(format.parse("15 Jan 2014"),format.parse("30 Jan 2014")); 
-		  dateRanges.add(dateRange);
-		  dateRange = null;
-		  
-	  } catch (ParseException e) { 
-		  // TODO Auto-generated catch block
-		  e.printStackTrace(); 
-	  } 
-	  System.out.println("input dates 3");
-	  System.out.println(dateRanges); System.out.println("output dates 3 ");
+	  dateRanges = new ArrayList<>();
+
+	  dateRanges.add(new DateRange()
+		  .startDate(format.parse("01 Jan 2014"))
+		  .endDate(format.parse("15 Jan 2014"))
+	  );
+
+	  dateRanges.add(new DateRange()
+		.startDate(format.parse("01 Jan 2014"))
+		.endDate(format.parse("15 Jan 2014"))
+	  );
+
+	  dateRanges.add(new DateRange()
+		  .startDate(format.parse("15 Jan 2014"))
+		  .endDate(format.parse("30 Jan 2014"))
+	  );
+
+	  System.out.println("Third Set:");
+	  System.out.println("input dates ");
+	  System.out.println(dateRanges);
+	  System.out.println("output dates ");
 	  System.out.println(dm.mergeDates(dateRanges));
 		 
 	}
